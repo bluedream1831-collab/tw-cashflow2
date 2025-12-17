@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 更新網頁標題 -->
-    <title>小資時薪帳本 | WUCJ</title>
+    <title>小資時薪帳本 v2.3 (加班精算版) | WUCJ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fdfa; } /* 淺綠背景 */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fdfa; }
         .locked input, .locked select { background-color: #e5e7eb; cursor: not-allowed; pointer-events: none; }
-        .tab-active { border-bottom: 3px solid #0d9488; color: #0d9488; font-weight: bold; } /* Teal色系 */
+        .tab-active { border-bottom: 3px solid #0d9488; color: #0d9488; font-weight: bold; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .input-money { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
     </style>
@@ -22,9 +21,7 @@
 <!-- 導航列 -->
 <nav class="bg-white shadow-md p-3 sticky top-0 z-50 border-t-4 border-teal-600">
     <div class="max-w-5xl mx-auto">
-        <!-- 上排：標題與年月選擇 -->
         <div class="flex justify-between items-center mb-2">
-            <!-- 更新顯示名稱 -->
             <h1 class="text-lg md:text-xl font-bold text-gray-800 flex items-center">
                 <i class="fas fa-book-open mr-2 text-teal-600"></i> 小資時薪帳本
             </h1>
@@ -36,14 +33,11 @@
             </div>
         </div>
         
-        <!-- 下排：分頁與沙龍連結 -->
         <div class="flex justify-between items-end border-t pt-2">
             <div class="flex space-x-2 md:space-x-6 text-sm md:text-base">
                 <button onclick="switchTab('calculator')" id="btn-tab-calc" class="tab-active pb-1 px-2 transition"><i class="fas fa-edit mr-1"></i>工時紀錄</button>
                 <button onclick="switchTab('report')" id="btn-tab-rep" class="pb-1 text-gray-500 hover:text-teal-600 px-2 transition"><i class="fas fa-chart-pie mr-1"></i>年度統計</button>
             </div>
-            
-            <!-- WUCJ 沙龍連結 -->
             <a href="https://vocus.cc/salon/WUCJ" target="_blank" class="text-teal-600 hover:text-white hover:bg-teal-500 border border-teal-200 hover:border-teal-500 px-3 py-1 rounded-full text-xs md:text-sm font-bold flex items-center transition shadow-sm">
                 <i class="fas fa-rss mr-1"></i> WUCJ 沙龍
             </a>
@@ -60,7 +54,7 @@
         <div class="flex flex-wrap gap-2 mb-4 justify-end items-center bg-white p-2 rounded shadow-sm">
             <span class="text-xs text-gray-500 mr-auto font-mono" id="currentMonthLabel">載入中...</span>
             <button onclick="copySettingsToAll()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1 rounded text-xs transition border border-indigo-200">
-                <i class="fas fa-clone mr-1"></i> 複製時薪設定
+                <i class="fas fa-clone mr-1"></i> 複製設定至整年
             </button>
             <button onclick="toggleLock()" id="lockBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs transition border border-gray-300">
                 <i class="fas fa-unlock mr-1"></i> 鎖定
@@ -72,12 +66,12 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="inputArea">
             
-            <!-- A區: 時薪設定 -->
+            <!-- A區: 收入設定 -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-teal-500">
                 <h3 class="font-bold text-gray-800 mb-3 flex items-center">
-                    ⏱️ 時薪設定
+                    💰 收入項目
                 </h3>
-                <div class="space-y-4">
+                <div class="space-y-3">
                     <div class="flex justify-between items-center bg-teal-50 p-2 rounded border border-teal-100">
                         <label class="text-sm font-bold text-teal-800">目前時薪 (NT$)</label>
                         <input type="number" id="hourlyRate" class="input-money border-2 border-teal-300 rounded p-1 w-28 text-right text-xl focus:ring-2 ring-teal-200 outline-none text-teal-700" placeholder="190" oninput="calculate()">
@@ -87,29 +81,39 @@
                         <label class="text-sm text-gray-600">全勤/業績獎金</label>
                         <input type="number" id="bonus" class="input-money border rounded p-1 w-28 text-right focus:ring-2 ring-yellow-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
-                    <div class="text-xs text-gray-400 mt-1">
-                        * 若有「排班津貼」或「單次獎金」，可直接輸入於下方表格或加總填入此處。
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm text-gray-600">額外獎金 (單次)</label>
+                        <input type="number" id="extraBonus" class="input-money border rounded p-1 w-28 text-right focus:ring-2 ring-yellow-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                 </div>
             </div>
 
             <!-- B區: 扣款設定 -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-400">
-                <h3 class="font-bold text-gray-800 mb-3">💸 每月扣款 (勞健保/福利金)</h3>
-                <div class="space-y-3">
+                <h3 class="font-bold text-gray-800 mb-3">💸 支出/扣款項目</h3>
+                <div class="space-y-2">
                     <div class="flex justify-between items-center">
                         <label class="text-sm">勞保自付</label>
-                        <input type="number" id="deductLabor" class="input-money border rounded p-1 w-28 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
+                        <input type="number" id="deductLabor" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                     <div class="flex justify-between items-center">
                         <label class="text-sm">健保自付</label>
-                        <input type="number" id="deductHealth" class="input-money border rounded p-1 w-28 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
+                        <input type="number" id="deductHealth" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                     <div class="flex justify-between items-center">
-                        <label class="text-sm">請假/其他扣項</label>
-                        <input type="number" id="deductOther" class="input-money border rounded p-1 w-28 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
+                        <label class="text-sm">公司福利儲蓄</label>
+                        <input type="number" id="deductSavings" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
-                    <div class="pt-2 text-right">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm">團險/雜費</label>
+                        <input type="number" id="deductGroupIns" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm text-gray-500">請假/其他扣項</label>
+                        <input type="number" id="deductOther" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
+                    </div>
+                    
+                    <div class="pt-2 text-right border-t mt-2">
                         <span class="text-xs text-gray-500 mr-2">扣款合計</span>
                         <span id="displayDeductTotal" class="font-bold font-mono text-red-600 text-lg">0</span>
                     </div>
@@ -121,7 +125,7 @@
         <div class="bg-white p-4 rounded-lg shadow mb-32">
             <div class="flex justify-between items-center mb-3 pb-2 border-b">
                 <div>
-                    <h3 class="font-bold text-lg"><i class="fas fa-calendar-check text-teal-500 mr-2"></i>排班/工時紀錄</h3>
+                    <h3 class="font-bold text-lg"><i class="fas fa-clock text-teal-500 mr-2"></i>工時與加班紀錄</h3>
                 </div>
                 <button onclick="addShiftRow()" class="bg-teal-600 text-white px-4 py-1.5 rounded-full text-sm hover:bg-teal-700 shadow flex items-center transition">
                     <i class="fas fa-plus mr-1"></i> 紀錄工時
@@ -138,9 +142,10 @@
                     <span class="text-teal-600 block">一般薪資</span>
                     <span class="font-bold text-teal-700 text-lg" id="normalPayDisplay">$0</span>
                 </div>
-                <div class="bg-yellow-50 px-3 py-1 rounded border border-yellow-200 min-w-[120px]">
-                    <span class="text-yellow-600 block">加班/加成</span>
-                    <span class="font-bold text-yellow-700 text-lg" id="otPayDisplay">$0</span>
+                <!-- 加班費強調顯示 -->
+                <div class="bg-yellow-100 px-3 py-1 rounded border border-yellow-300 min-w-[120px]">
+                    <span class="text-yellow-700 block font-bold"><i class="fas fa-fire mr-1"></i>加班費總計</span>
+                    <span class="font-bold text-yellow-800 text-lg" id="otPayDisplay">$0</span>
                 </div>
             </div>
 
@@ -149,7 +154,7 @@
                     <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                         <tr>
                             <th class="p-2 w-32">日期</th>
-                            <th class="p-2 min-w-[160px]">類型</th>
+                            <th class="p-2 min-w-[160px]">類型 (加班費率)</th>
                             <th class="p-2 w-20 text-center">時數</th>
                             <th class="p-2 text-right">薪資小計</th>
                             <th class="p-2 w-10"></th>
@@ -213,8 +218,8 @@
                 <div class="text-2xl font-bold font-mono mt-1 text-gray-800" id="yearNetTotal">$0</div>
             </div>
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-yellow-500">
-                <div class="text-sm text-gray-500">年度累積工時</div>
-                <div class="text-2xl font-bold font-mono mt-1 text-gray-800" id="yearTotalHours">0h</div>
+                <div class="text-sm text-gray-500">年度加班費總計</div>
+                <div class="text-2xl font-bold font-mono mt-1 text-yellow-600" id="yearOtTotal">$0</div>
             </div>
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500">
                 <div class="text-sm text-gray-500">平均時薪 (實領/工時)</div>
@@ -230,14 +235,15 @@
         
         <!-- 年度明細 -->
         <div class="bg-white rounded-lg shadow mb-8 overflow-hidden">
-            <h4 class="font-bold text-gray-700 p-4 border-b bg-gray-50"><i class="fas fa-list mr-2"></i>每月詳細數據</h4>
+            <h4 class="font-bold text-gray-700 p-4 border-b bg-gray-50"><i class="fas fa-list mr-2"></i>每月詳細數據 (加班費獨立顯示)</h4>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-100 text-gray-600">
                         <tr>
                             <th class="p-3 whitespace-nowrap">月份</th>
-                            <th class="p-3 text-right">總工時</th>
-                            <th class="p-3 text-right">薪資總額</th>
+                            <th class="p-3 text-right">一般薪資</th>
+                            <th class="p-3 text-right text-yellow-600 font-bold bg-yellow-50">加班費</th>
+                            <th class="p-3 text-right text-blue-600">獎金</th>
                             <th class="p-3 text-right text-red-500">扣款</th>
                             <th class="p-3 text-right font-bold text-teal-600">實領金額</th>
                             <th class="p-3 text-center">操作</th>
@@ -250,7 +256,7 @@
             </div>
         </div>
 
-        <!-- 更新後的導流 Card -->
+        <!-- 導流 Card -->
         <div class="mt-8 bg-gradient-to-r from-teal-700 to-teal-800 text-white p-5 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h4 class="font-bold text-lg flex items-center"><i class="fas fa-lightbulb text-yellow-400 mr-2"></i> 喜歡這個小工具嗎？</h4>
@@ -266,11 +272,11 @@
 </div>
 
 <script>
-    // ================= 核心設定 (時薪版) =================
+    // ================= 核心設定 =================
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth() + 1;
     let isLocked = false;
-    const STORAGE_KEY = 'salary_pt_v2_wucj'; // Key區分：時薪版
+    const STORAGE_KEY = 'salary_pt_v2_wucj'; 
     let appData = {};
 
     window.onload = function() {
@@ -300,10 +306,12 @@
         if (!appData[y]) appData[y] = {};
         if (!appData[y][m]) {
             appData[y][m] = {
-                hourlyRate: '190', // 2025預設
-                bonus: '',
-                deductLabor: '', deductHealth: '', deductOther: '',
-                shifts: [] // 改名為 shifts
+                hourlyRate: '190',
+                bonus: '', extraBonus: '',
+                deductLabor: '', deductHealth: '', 
+                deductSavings: '', deductGroupIns: '', 
+                deductOther: '',
+                shifts: [] 
             };
         }
         return appData[y][m];
@@ -339,18 +347,23 @@
         
         document.getElementById('hourlyRate').value = data.hourlyRate;
         document.getElementById('bonus').value = data.bonus;
+        document.getElementById('extraBonus').value = data.extraBonus || ''; 
+        
         document.getElementById('deductLabor').value = data.deductLabor;
         document.getElementById('deductHealth').value = data.deductHealth;
+        document.getElementById('deductSavings').value = data.deductSavings || ''; 
+        document.getElementById('deductGroupIns').value = data.deductGroupIns || ''; 
         document.getElementById('deductOther').value = data.deductOther;
         
         renderWorkTable(data.shifts);
         calculate(false);
     }
 
-    // ================= 計算引擎 (時薪核心) =================
+    // ================= 計算引擎 =================
     function calculate(shouldSave = true) {
         const rate = parseFloat(document.getElementById('hourlyRate').value) || 0;
         const bonus = parseFloat(document.getElementById('bonus').value) || 0;
+        const extraBonus = parseFloat(document.getElementById('extraBonus').value) || 0;
         
         const data = getMonthData(currentYear, currentMonth);
         
@@ -358,7 +371,6 @@
         let normalIncome = 0;
         let otIncome = 0;
 
-        // 計算每一筆工時
         data.shifts.forEach(item => {
             const h = parseFloat(item.hours) || 0;
             totalHours += h;
@@ -368,10 +380,10 @@
                 pay = h * rate;
                 normalIncome += pay;
             } else if (item.type === 'ot_134') {
-                pay = h * rate * 1.34; // 可改 4/3
+                pay = h * rate * 1.34; 
                 otIncome += pay;
             } else if (item.type === 'ot_167') {
-                pay = h * rate * 1.67; // 可改 5/3
+                pay = h * rate * 1.67;
                 otIncome += pay;
             } else if (item.type === 'ot_200') {
                 pay = h * rate * 2;
@@ -380,25 +392,24 @@
             item.pay = pay;
         });
 
-        // UI 表格金額更新
         data.shifts.forEach((item, idx) => {
             const el = document.getElementById(`shift-pay-${idx}`);
             if(el) el.innerText = Math.round(item.pay);
         });
 
-        // 扣款計算
         const dLabor = parseFloat(document.getElementById('deductLabor').value) || 0;
         const dHealth = parseFloat(document.getElementById('deductHealth').value) || 0;
+        const dSavings = parseFloat(document.getElementById('deductSavings').value) || 0;
+        const dGroupIns = parseFloat(document.getElementById('deductGroupIns').value) || 0;
         const dOther = parseFloat(document.getElementById('deductOther').value) || 0;
-        const totalDeduct = dLabor + dHealth + dOther;
+        
+        const totalDeduct = dLabor + dHealth + dSavings + dGroupIns + dOther;
         
         document.getElementById('displayDeductTotal').innerText = totalDeduct.toLocaleString();
 
-        // 總結算
-        const totalGross = normalIncome + otIncome + bonus;
+        const totalGross = normalIncome + otIncome + bonus + extraBonus;
         const netPay = totalGross - totalDeduct;
 
-        // 儀表板更新
         document.getElementById('totalHoursDisplay').innerText = totalHours.toFixed(1) + 'h';
         document.getElementById('normalPayDisplay').innerText = '$' + Math.round(normalIncome).toLocaleString();
         document.getElementById('otPayDisplay').innerText = '$' + Math.round(otIncome).toLocaleString();
@@ -410,8 +421,11 @@
         if (shouldSave) {
             data.hourlyRate = document.getElementById('hourlyRate').value;
             data.bonus = document.getElementById('bonus').value;
+            data.extraBonus = document.getElementById('extraBonus').value;
             data.deductLabor = document.getElementById('deductLabor').value;
             data.deductHealth = document.getElementById('deductHealth').value;
+            data.deductSavings = document.getElementById('deductSavings').value;
+            data.deductGroupIns = document.getElementById('deductGroupIns').value;
             data.deductOther = document.getElementById('deductOther').value;
             saveData();
         }
@@ -433,7 +447,6 @@
             const tr = document.createElement('tr');
             tr.className = "border-b hover:bg-gray-50 transition";
             
-            // 判斷選單顏色
             let selectClass = "font-bold text-gray-700";
             if(item.type.includes('ot')) selectClass = "font-bold text-orange-600";
             if(item.type === 'ot_200') selectClass = "font-bold text-red-600";
@@ -486,7 +499,7 @@
 
     // ================= 功能操作 =================
     function copySettingsToAll() {
-        if(!confirm(`要將 ${currentMonth} 月的「時薪、勞健保扣款」設定複製到整年嗎？`)) return;
+        if(!confirm(`要將 ${currentMonth} 月的「時薪、各項扣款」設定複製到整年嗎？`)) return;
         const src = getMonthData(currentYear, currentMonth);
         for(let i=1; i<=12; i++) {
             if (i === currentMonth) continue;
@@ -494,6 +507,8 @@
             target.hourlyRate = src.hourlyRate;
             target.deductLabor = src.deductLabor;
             target.deductHealth = src.deductHealth;
+            target.deductSavings = src.deductSavings;
+            target.deductGroupIns = src.deductGroupIns;
         }
         saveData();
         alert("設定已複製！");
@@ -502,8 +517,8 @@
     function clearCurrentMonth() {
         if(!confirm("確定清空本月所有資料？")) return;
         const data = getMonthData(currentYear, currentMonth);
-        data.hourlyRate = '190'; data.bonus = '';
-        data.deductLabor = ''; data.deductHealth = ''; data.deductOther = '';
+        data.hourlyRate = '190'; data.bonus = ''; data.extraBonus = '';
+        data.deductLabor = ''; data.deductHealth = ''; data.deductSavings = ''; data.deductGroupIns = ''; data.deductOther = '';
         data.shifts = [];
         saveData();
         loadMonthUI();
@@ -526,7 +541,7 @@
         }
     }
 
-    // ================= 年度報表 =================
+    // ================= 年度報表 (強化加班顯示) =================
     let chartInstance = null;
     function updateYearlyReport() {
         let labels = [];
@@ -534,14 +549,16 @@
         let hoursData = [];
         let stats = [];
         
-        let sumNet = 0; let sumHours = 0;
+        let sumNet = 0; let sumHours = 0; let sumOtPay = 0;
 
         for(let i=1; i<=12; i++) {
             const d = appData[currentYear]?.[i];
             const rate = parseFloat(d?.hourlyRate)||0;
             const bonus = parseFloat(d?.bonus)||0;
+            const extra = parseFloat(d?.extraBonus)||0; 
             
-            let monthIncome = bonus;
+            let monthRegPay = 0;
+            let monthOtPay = 0;
             let monthHours = 0;
             
             if(d?.shifts) {
@@ -549,31 +566,51 @@
                     let h = parseFloat(s.hours)||0;
                     monthHours += h;
                     let p = 0;
-                    if(s.type==='normal') p = h * rate;
-                    else if(s.type==='ot_134') p = h * rate * 1.34;
-                    else if(s.type==='ot_167') p = h * rate * 1.67;
-                    else if(s.type==='ot_200') p = h * rate * 2;
-                    monthIncome += p;
+                    if(s.type==='normal') {
+                        p = h * rate;
+                        monthRegPay += p;
+                    } else {
+                        // 所有加班類型
+                        if(s.type==='ot_134') p = h * rate * 1.34;
+                        else if(s.type==='ot_167') p = h * rate * 1.67;
+                        else if(s.type==='ot_200') p = h * rate * 2;
+                        monthOtPay += p;
+                    }
                 });
             }
 
-            const ded = (parseFloat(d?.deductLabor)||0) + (parseFloat(d?.deductHealth)||0) + (parseFloat(d?.deductOther)||0);
-            const net = monthIncome - ded;
+            const ded = (parseFloat(d?.deductLabor)||0) + 
+                        (parseFloat(d?.deductHealth)||0) + 
+                        (parseFloat(d?.deductSavings)||0) + 
+                        (parseFloat(d?.deductGroupIns)||0) + 
+                        (parseFloat(d?.deductOther)||0);
+            
+            const totalBonuses = bonus + extra;
+            const net = monthRegPay + monthOtPay + totalBonuses - ded;
             
             sumNet += net; 
             sumHours += monthHours;
+            sumOtPay += monthOtPay;
             
             labels.push(i + '月');
             nets.push(net);
             hoursData.push(monthHours);
             
-            if (monthIncome > 0 || monthHours > 0) { 
-                stats.push({ m: i, hours: monthHours, gross: monthIncome, ded: ded, net: net });
+            if (monthRegPay + monthOtPay + totalBonuses > 0) { 
+                stats.push({ 
+                    m: i, 
+                    hours: monthHours, 
+                    regPay: monthRegPay, 
+                    otPay: monthOtPay,
+                    bonuses: totalBonuses,
+                    ded: ded, 
+                    net: net 
+                });
             }
         }
 
         document.getElementById('yearNetTotal').innerText = "$" + Math.round(sumNet).toLocaleString();
-        document.getElementById('yearTotalHours').innerText = sumHours.toFixed(1) + "h";
+        document.getElementById('yearOtTotal').innerText = "$" + Math.round(sumOtPay).toLocaleString();
         let avg = sumHours > 0 ? Math.round(sumNet / sumHours) : 0;
         document.getElementById('yearAvgRate').innerText = "$" + avg + "/h";
 
@@ -598,19 +635,20 @@
             }
         });
         
-        // Table
+        // Table - 增加加班費欄位
         const tbody = document.getElementById('yearlyTableBody');
         tbody.innerHTML = '';
         if (stats.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">目前沒有資料，請先至「工時紀錄」輸入。</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">目前沒有資料，請先至「工時紀錄」輸入。</td></tr>';
         } else {
             stats.forEach(s => {
                 const tr = document.createElement('tr');
                 tr.className = "border-b hover:bg-gray-50";
                 tr.innerHTML = `
                     <td class="p-3 text-center font-bold">${s.m}月</td>
-                    <td class="p-3 text-right text-gray-800">${s.hours.toFixed(1)}h</td>
-                    <td class="p-3 text-right text-teal-700">${Math.round(s.gross).toLocaleString()}</td>
+                    <td class="p-3 text-right text-gray-800">${Math.round(s.regPay).toLocaleString()}</td>
+                    <td class="p-3 text-right text-yellow-700 font-bold bg-yellow-50">${s.otPay > 0 ? Math.round(s.otPay).toLocaleString() : '-'}</td>
+                    <td class="p-3 text-right text-blue-600">${s.bonuses > 0 ? s.bonuses.toLocaleString() : '-'}</td>
                     <td class="p-3 text-right text-red-400">${s.ded > 0 ? '-' + s.ded.toLocaleString() : '-'}</td>
                     <td class="p-3 text-right font-bold text-teal-600">${Math.round(s.net).toLocaleString()}</td>
                     <td class="p-3 text-center">
@@ -628,12 +666,13 @@
         switchTab('calculator');
     }
 
-    // Excel 匯出 (針對時薪版調整)
+    // ================= 檔案處理 (Excel / JSON) =================
     function exportYearlyExcel() {
         const wb = XLSX.utils.book_new();
+        // 更新 Excel 標題，拆分一般工時與加班工時
         let wsData = [
-            ["年度時薪/工時報表", currentYear + "年"],
-            ["月份", "設定時薪", "總工時", "工時薪資", "獎金", "扣款", "實領金額"]
+            ["年度時薪/加班費詳細報表", currentYear + "年"],
+            ["月份", "設定時薪", "一般工時", "加班工時", "一般薪資", "加班費", "固定獎金", "額外獎金", "勞保", "健保", "福利儲蓄", "團險/雜費", "其他扣項", "實領金額"]
         ];
 
         for(let i=1; i<=12; i++) {
@@ -641,28 +680,50 @@
             if(d) {
                 const rate = d.hourlyRate;
                 const bonus = parseFloat(d.bonus)||0;
-                let monthHours = 0; 
-                let workPay = 0;
+                const extra = parseFloat(d.extraBonus)||0;
+                
+                let regHours = 0;
+                let otHours = 0;
+                let regPay = 0;
+                let otPay = 0;
                 
                 if(d.shifts) {
                     d.shifts.forEach(s => {
                         let h = parseFloat(s.hours)||0;
-                        monthHours += h;
-                        if(s.type==='normal') workPay += h * rate;
-                        else if(s.type==='ot_134') workPay += h * rate * 1.34;
-                        else if(s.type==='ot_167') workPay += h * rate * 1.67;
-                        else if(s.type==='ot_200') workPay += h * rate * 2;
+                        if(s.type==='normal') {
+                            regHours += h;
+                            regPay += h * rate;
+                        } else {
+                            otHours += h;
+                            if(s.type==='ot_134') otPay += h * rate * 1.34;
+                            else if(s.type==='ot_167') otPay += h * rate * 1.67;
+                            else if(s.type==='ot_200') otPay += h * rate * 2;
+                        }
                     });
                 }
-                const ded = (parseFloat(d.deductLabor)||0) + (parseFloat(d.deductHealth)||0) + (parseFloat(d.deductOther)||0);
-                const net = workPay + bonus - ded;
                 
-                wsData.push([i, rate, monthHours, Math.round(workPay), bonus, ded, Math.round(net)]);
+                const dLabor = parseFloat(d.deductLabor)||0;
+                const dHealth = parseFloat(d.deductHealth)||0;
+                const dSavings = parseFloat(d.deductSavings)||0;
+                const dGroupIns = parseFloat(d.deductGroupIns)||0;
+                const dOther = parseFloat(d.deductOther)||0;
+                
+                const totalDed = dLabor + dHealth + dSavings + dGroupIns + dOther;
+                const net = regPay + otPay + bonus + extra - totalDed;
+                
+                wsData.push([
+                    i, rate, 
+                    regHours, otHours, 
+                    Math.round(regPay), Math.round(otPay), 
+                    bonus, extra, 
+                    dLabor, dHealth, dSavings, dGroupIns, dOther, 
+                    Math.round(net)
+                ]);
             }
         }
         const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, "年度總表");
-        XLSX.writeFile(wb, `PartTime_Salary_${currentYear}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "年度詳細報表");
+        XLSX.writeFile(wb, `Salary_Detail_Report_${currentYear}.xlsx`);
     }
 
     function exportJson() {
