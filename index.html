@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小資時薪帳本 v2.3 (加班精算版) | WUCJ</title>
+    <title>小資時薪帳本 v2.4 (詳解版) | WUCJ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -14,6 +14,21 @@
         .tab-active { border-bottom: 3px solid #0d9488; color: #0d9488; font-weight: bold; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .input-money { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        
+        /* Tooltip CSS 設定 */
+        .tooltip-container { position: relative; display: inline-block; }
+        .tooltip-text { 
+            visibility: hidden; width: 220px; background-color: #374151; color: #fff; 
+            text-align: center; border-radius: 6px; padding: 8px; 
+            position: absolute; z-index: 100; bottom: 125%; left: 50%; margin-left: -110px; 
+            opacity: 0; transition: opacity 0.3s; font-size: 12px; font-weight: normal; 
+            pointer-events: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #374151 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body class="text-gray-700 pb-24">
@@ -70,19 +85,32 @@
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-teal-500">
                 <h3 class="font-bold text-gray-800 mb-3 flex items-center">
                     💰 收入項目
+                    <div class="tooltip-container ml-2">
+                        <i class="fas fa-question-circle text-gray-400 text-sm cursor-help"></i>
+                        <span class="tooltip-text">請輸入您的基本時薪。若有全勤或績效獎金請填入「經常性」，一次性紅包請填「非經常性」。</span>
+                    </div>
                 </h3>
                 <div class="space-y-3">
                     <div class="flex justify-between items-center bg-teal-50 p-2 rounded border border-teal-100">
-                        <label class="text-sm font-bold text-teal-800">目前時薪 (NT$)</label>
+                        <div class="flex flex-col">
+                            <label class="text-sm font-bold text-teal-800">目前時薪 (NT$)</label>
+                            <span class="text-[10px] text-teal-600 font-bold"><i class="fas fa-info-circle mr-1"></i>2025 法定最低 $190</span>
+                        </div>
                         <input type="number" id="hourlyRate" class="input-money border-2 border-teal-300 rounded p-1 w-28 text-right text-xl focus:ring-2 ring-teal-200 outline-none text-teal-700" placeholder="190" oninput="calculate()">
                     </div>
                     
                     <div class="flex justify-between items-center">
-                        <label class="text-sm text-gray-600">全勤/業績獎金</label>
+                        <div class="flex flex-col">
+                            <label class="text-sm text-gray-600">經常性獎金</label>
+                            <span class="text-[10px] text-gray-400">如: 全勤、績效、排班津貼</span>
+                        </div>
                         <input type="number" id="bonus" class="input-money border rounded p-1 w-28 text-right focus:ring-2 ring-yellow-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                     <div class="flex justify-between items-center">
-                        <label class="text-sm text-gray-600">額外獎金 (單次)</label>
+                        <div class="flex flex-col">
+                            <label class="text-sm text-gray-600">非經常性獎金</label>
+                            <span class="text-[10px] text-gray-400">如: 三節、紅包 (不列入時薪)</span>
+                        </div>
                         <input type="number" id="extraBonus" class="input-money border rounded p-1 w-28 text-right focus:ring-2 ring-yellow-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                 </div>
@@ -90,22 +118,39 @@
 
             <!-- B區: 扣款設定 -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-400">
-                <h3 class="font-bold text-gray-800 mb-3">💸 支出/扣款項目</h3>
+                <h3 class="font-bold text-gray-800 mb-3">💸 支出/扣款項目
+                    <div class="tooltip-container ml-2">
+                        <i class="fas fa-question-circle text-gray-400 text-sm cursor-help"></i>
+                        <span class="tooltip-text">包含法定的勞健保自付額(通常由投保薪資級距決定)，以及公司內部的福利金/團保扣款。</span>
+                    </div>
+                </h3>
                 <div class="space-y-2">
                     <div class="flex justify-between items-center">
-                        <label class="text-sm">勞保自付</label>
+                        <div class="flex flex-col">
+                            <label class="text-sm">勞保自付</label>
+                            <span class="text-[10px] text-gray-400">勞工負擔 20%</span>
+                        </div>
                         <input type="number" id="deductLabor" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                     <div class="flex justify-between items-center">
-                        <label class="text-sm">健保自付</label>
+                        <div class="flex flex-col">
+                            <label class="text-sm">健保自付</label>
+                            <span class="text-[10px] text-gray-400">勞工負擔 30%</span>
+                        </div>
                         <input type="number" id="deductHealth" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                     <div class="flex justify-between items-center">
-                        <label class="text-sm">公司福利儲蓄</label>
+                        <div class="flex flex-col">
+                            <label class="text-sm">公司福利儲蓄</label>
+                            <span class="text-[10px] text-gray-400">互助金/旅遊基金</span>
+                        </div>
                         <input type="number" id="deductSavings" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                     <div class="flex justify-between items-center">
-                        <label class="text-sm">團險/雜費</label>
+                        <div class="flex flex-col">
+                            <label class="text-sm">團險/雜費</label>
+                            <span class="text-[10px] text-gray-400">公司團保或其他</span>
+                        </div>
                         <input type="number" id="deductGroupIns" class="input-money border rounded p-1 w-24 text-right text-red-600 focus:ring-2 ring-red-200 outline-none" placeholder="0" oninput="calculate()">
                     </div>
                     <div class="flex justify-between items-center">
@@ -131,6 +176,38 @@
                     <i class="fas fa-plus mr-1"></i> 紀錄工時
                 </button>
             </div>
+
+            <!-- 加班費率小教室 (收合式) -->
+            <details class="mb-4 bg-orange-50 border border-orange-200 rounded text-sm text-gray-700">
+                <summary class="p-2 cursor-pointer font-bold text-orange-700 hover:bg-orange-100 transition list-none flex justify-between items-center select-none">
+                    <span><i class="fas fa-book-reader mr-2"></i>加班費率怎麼算？(點擊展開/收合)</span>
+                    <i class="fas fa-chevron-down text-xs text-orange-400"></i>
+                </summary>
+                <div class="p-3 text-xs md:text-sm border-t border-orange-200 space-y-2 bg-white">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="border-b md:border-b-0 pb-2 md:pb-0">
+                            <span class="font-bold text-gray-800 block mb-1">📅 平日加班 (前2小時)</span>
+                            <span class="text-gray-600 bg-gray-100 px-2 py-0.5 rounded">時薪 × 1.34 (1⅓)</span>
+                        </div>
+                        <div class="border-b md:border-b-0 pb-2 md:pb-0">
+                            <span class="font-bold text-gray-800 block mb-1">📅 平日加班 (後2小時)</span>
+                            <span class="text-gray-600 bg-gray-100 px-2 py-0.5 rounded">時薪 × 1.67 (1⅔)</span>
+                        </div>
+                        <div class="border-b md:border-b-0 pb-2 md:pb-0">
+                            <span class="font-bold text-gray-800 block mb-1">🏖️ 休息日 (前2小時)</span>
+                            <span class="text-gray-600 bg-gray-100 px-2 py-0.5 rounded">時薪 × 1.34</span>
+                        </div>
+                        <div>
+                            <span class="font-bold text-gray-800 block mb-1">🏖️ 休息日 (3-8小時)</span>
+                            <span class="text-gray-600 bg-gray-100 px-2 py-0.5 rounded">時薪 × 1.67</span>
+                        </div>
+                        <div class="md:col-span-2 pt-2 border-t border-orange-100">
+                            <span class="font-bold text-red-600 block mb-1">㊗️ 國定假日 / 天災出勤</span>
+                            <span class="text-gray-600 bg-red-50 px-2 py-0.5 rounded border border-red-100">時薪 × 2 (雙倍薪)</span>
+                        </div>
+                    </div>
+                </div>
+            </details>
 
             <!-- 統計儀表 -->
             <div class="flex gap-3 mb-4 text-xs md:text-sm overflow-x-auto pb-1">
@@ -456,8 +533,8 @@
                 <td class="p-2">
                     <select onchange="updateShift(${index}, 'type', this.value)" class="border rounded px-2 py-1 w-full text-xs bg-white ${selectClass}">
                         <option value="normal" ${item.type === 'normal' ? 'selected' : ''}>一般工時 (1.0)</option>
-                        <option value="ot_134" ${item.type === 'ot_134' ? 'selected' : ''}>加班/休息日 (1.34)</option>
-                        <option value="ot_167" ${item.type === 'ot_167' ? 'selected' : ''}>加班後段 (1.67)</option>
+                        <option value="ot_134" ${item.type === 'ot_134' ? 'selected' : ''}>平日加班/前2H (1.34)</option>
+                        <option value="ot_167" ${item.type === 'ot_167' ? 'selected' : ''}>平日加班/後2H (1.67)</option>
                         <option value="ot_200" ${item.type === 'ot_200' ? 'selected' : ''}>國定假日 (2.0)</option>
                     </select>
                 </td>
@@ -695,64 +772,3 @@
                             regPay += h * rate;
                         } else {
                             otHours += h;
-                            if(s.type==='ot_134') otPay += h * rate * 1.34;
-                            else if(s.type==='ot_167') otPay += h * rate * 1.67;
-                            else if(s.type==='ot_200') otPay += h * rate * 2;
-                        }
-                    });
-                }
-                
-                const dLabor = parseFloat(d.deductLabor)||0;
-                const dHealth = parseFloat(d.deductHealth)||0;
-                const dSavings = parseFloat(d.deductSavings)||0;
-                const dGroupIns = parseFloat(d.deductGroupIns)||0;
-                const dOther = parseFloat(d.deductOther)||0;
-                
-                const totalDed = dLabor + dHealth + dSavings + dGroupIns + dOther;
-                const net = regPay + otPay + bonus + extra - totalDed;
-                
-                wsData.push([
-                    i, rate, 
-                    regHours, otHours, 
-                    Math.round(regPay), Math.round(otPay), 
-                    bonus, extra, 
-                    dLabor, dHealth, dSavings, dGroupIns, dOther, 
-                    Math.round(net)
-                ]);
-            }
-        }
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, "年度詳細報表");
-        XLSX.writeFile(wb, `Salary_Detail_Report_${currentYear}.xlsx`);
-    }
-
-    function exportJson() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", `PT_Backup_${currentYear}.json`);
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-    }
-
-    function importData(input) {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const raw = JSON.parse(e.target.result);
-                if (typeof raw === 'object') {
-                    appData = raw;
-                    saveData();
-                    alert("匯入成功！頁面將重新整理。");
-                    location.reload();
-                } else { alert("格式錯誤"); }
-            } catch (err) { alert("檔案損毀"); }
-        };
-        reader.readAsText(file);
-    }
-</script>
-</body>
-</html>
