@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小資時薪帳本 v2.4 (詳解版) | WUCJ</title>
+    <title>小資時薪帳本 v2.5 (修復版) | WUCJ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -15,7 +15,7 @@
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .input-money { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
         
-        /* Tooltip CSS 設定 */
+        /* Tooltip CSS */
         .tooltip-container { position: relative; display: inline-block; }
         .tooltip-text { 
             visibility: hidden; width: 220px; background-color: #374151; color: #fff; 
@@ -61,6 +61,15 @@
 </nav>
 
 <div class="max-w-5xl mx-auto p-3 md:p-6">
+
+    <!-- 錯誤救援按鈕 (平時隱藏，出錯時顯示) -->
+    <div id="errorPanel" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <strong class="font-bold">發生錯誤！</strong>
+        <span class="block sm:inline">資料載入失敗，請嘗試重置資料。</span>
+        <button onclick="hardReset()" class="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded">
+            重置所有資料 (修復)
+        </button>
+    </div>
 
     <!-- ================= 頁面 1: 當月試算 ================= -->
     <div id="view-calculator">
@@ -121,7 +130,7 @@
                 <h3 class="font-bold text-gray-800 mb-3">💸 支出/扣款項目
                     <div class="tooltip-container ml-2">
                         <i class="fas fa-question-circle text-gray-400 text-sm cursor-help"></i>
-                        <span class="tooltip-text">包含法定的勞健保自付額(通常由投保薪資級距決定)，以及公司內部的福利金/團保扣款。</span>
+                        <span class="tooltip-text">包含法定的勞健保自付額，以及公司內部的福利金/團保扣款。</span>
                     </div>
                 </h3>
                 <div class="space-y-2">
@@ -219,7 +228,6 @@
                     <span class="text-teal-600 block">一般薪資</span>
                     <span class="font-bold text-teal-700 text-lg" id="normalPayDisplay">$0</span>
                 </div>
-                <!-- 加班費強調顯示 -->
                 <div class="bg-yellow-100 px-3 py-1 rounded border border-yellow-300 min-w-[120px]">
                     <span class="text-yellow-700 block font-bold"><i class="fas fa-fire mr-1"></i>加班費總計</span>
                     <span class="font-bold text-yellow-800 text-lg" id="otPayDisplay">$0</span>
@@ -273,7 +281,6 @@
     <!-- ================= 頁面 2: 年度報表 ================= -->
     <div id="view-report" class="hidden">
         
-        <!-- 備份功能 -->
         <div class="flex flex-wrap justify-end gap-2 mb-4 bg-gray-100 p-2 rounded">
              <button onclick="exportYearlyExcel()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded shadow text-sm flex items-center transition">
                 <i class="fas fa-file-excel mr-2"></i> 匯出 Excel
@@ -312,7 +319,7 @@
         
         <!-- 年度明細 -->
         <div class="bg-white rounded-lg shadow mb-8 overflow-hidden">
-            <h4 class="font-bold text-gray-700 p-4 border-b bg-gray-50"><i class="fas fa-list mr-2"></i>每月詳細數據 (加班費獨立顯示)</h4>
+            <h4 class="font-bold text-gray-700 p-4 border-b bg-gray-50"><i class="fas fa-list mr-2"></i>每月詳細數據</h4>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-100 text-gray-600">
@@ -357,22 +364,40 @@
     let appData = {};
 
     window.onload = function() {
-        const select = document.getElementById('monthSelect');
-        for(let i=1; i<=12; i++) {
-            let opt = document.createElement('option');
-            opt.value = i;
-            opt.text = i + "月";
-            select.appendChild(opt);
+        try {
+            const select = document.getElementById('monthSelect');
+            for(let i=1; i<=12; i++) {
+                let opt = document.createElement('option');
+                opt.value = i;
+                opt.text = i + "月";
+                select.appendChild(opt);
+            }
+            document.getElementById('yearSelect').value = currentYear;
+            select.value = currentMonth;
+            loadAllData();
+            loadMonthUI();
+        } catch (error) {
+            console.error("Initialization Error:", error);
+            document.getElementById('errorPanel').classList.remove('hidden');
         }
-        document.getElementById('yearSelect').value = currentYear;
-        select.value = currentMonth;
-        loadAllData();
-        loadMonthUI();
     };
 
     function loadAllData() {
-        const json = localStorage.getItem(STORAGE_KEY);
-        appData = json ? JSON.parse(json) : {};
+        try {
+            const json = localStorage.getItem(STORAGE_KEY);
+            appData = json ? JSON.parse(json) : {};
+        } catch (e) {
+            console.error("Data Load Error", e);
+            document.getElementById('errorPanel').classList.remove('hidden');
+            appData = {};
+        }
+    }
+
+    function hardReset() {
+        if(confirm("確定要重置所有資料嗎？此動作無法復原。")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
     }
 
     function saveData() {
@@ -419,21 +444,25 @@
     }
 
     function loadMonthUI() {
-        document.getElementById('currentMonthLabel').innerText = `編輯中: ${currentYear}年 ${currentMonth}月`;
-        const data = getMonthData(currentYear, currentMonth);
-        
-        document.getElementById('hourlyRate').value = data.hourlyRate;
-        document.getElementById('bonus').value = data.bonus;
-        document.getElementById('extraBonus').value = data.extraBonus || ''; 
-        
-        document.getElementById('deductLabor').value = data.deductLabor;
-        document.getElementById('deductHealth').value = data.deductHealth;
-        document.getElementById('deductSavings').value = data.deductSavings || ''; 
-        document.getElementById('deductGroupIns').value = data.deductGroupIns || ''; 
-        document.getElementById('deductOther').value = data.deductOther;
-        
-        renderWorkTable(data.shifts);
-        calculate(false);
+        try {
+            document.getElementById('currentMonthLabel').innerText = `編輯中: ${currentYear}年 ${currentMonth}月`;
+            const data = getMonthData(currentYear, currentMonth);
+            
+            document.getElementById('hourlyRate').value = data.hourlyRate;
+            document.getElementById('bonus').value = data.bonus;
+            document.getElementById('extraBonus').value = data.extraBonus || ''; 
+            
+            document.getElementById('deductLabor').value = data.deductLabor;
+            document.getElementById('deductHealth').value = data.deductHealth;
+            document.getElementById('deductSavings').value = data.deductSavings || ''; 
+            document.getElementById('deductGroupIns').value = data.deductGroupIns || ''; 
+            document.getElementById('deductOther').value = data.deductOther;
+            
+            renderWorkTable(data.shifts);
+            calculate(false);
+        } catch (e) {
+            console.error("UI Load Error", e);
+        }
     }
 
     // ================= 計算引擎 =================
@@ -618,7 +647,7 @@
         }
     }
 
-    // ================= 年度報表 (強化加班顯示) =================
+    // ================= 年度報表 =================
     let chartInstance = null;
     function updateYearlyReport() {
         let labels = [];
@@ -647,7 +676,6 @@
                         p = h * rate;
                         monthRegPay += p;
                     } else {
-                        // 所有加班類型
                         if(s.type==='ot_134') p = h * rate * 1.34;
                         else if(s.type==='ot_167') p = h * rate * 1.67;
                         else if(s.type==='ot_200') p = h * rate * 2;
@@ -691,7 +719,6 @@
         let avg = sumHours > 0 ? Math.round(sumNet / sumHours) : 0;
         document.getElementById('yearAvgRate').innerText = "$" + avg + "/h";
 
-        // Chart
         const ctx = document.getElementById('yearlyChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
@@ -712,7 +739,6 @@
             }
         });
         
-        // Table - 增加加班費欄位
         const tbody = document.getElementById('yearlyTableBody');
         tbody.innerHTML = '';
         if (stats.length === 0) {
@@ -746,7 +772,6 @@
     // ================= 檔案處理 (Excel / JSON) =================
     function exportYearlyExcel() {
         const wb = XLSX.utils.book_new();
-        // 更新 Excel 標題，拆分一般工時與加班工時
         let wsData = [
             ["年度時薪/加班費詳細報表", currentYear + "年"],
             ["月份", "設定時薪", "一般工時", "加班工時", "一般薪資", "加班費", "固定獎金", "額外獎金", "勞保", "健保", "福利儲蓄", "團險/雜費", "其他扣項", "實領金額"]
@@ -772,3 +797,64 @@
                             regPay += h * rate;
                         } else {
                             otHours += h;
+                            if(s.type==='ot_134') otPay += h * rate * 1.34;
+                            else if(s.type==='ot_167') otPay += h * rate * 1.67;
+                            else if(s.type==='ot_200') otPay += h * rate * 2;
+                        }
+                    });
+                }
+                
+                const dLabor = parseFloat(d.deductLabor)||0;
+                const dHealth = parseFloat(d.deductHealth)||0;
+                const dSavings = parseFloat(d.deductSavings)||0;
+                const dGroupIns = parseFloat(d.deductGroupIns)||0;
+                const dOther = parseFloat(d.deductOther)||0;
+                
+                const totalDed = dLabor + dHealth + dSavings + dGroupIns + dOther;
+                const net = regPay + otPay + bonus + extra - totalDed;
+                
+                wsData.push([
+                    i, rate, 
+                    regHours, otHours, 
+                    Math.round(regPay), Math.round(otPay), 
+                    bonus, extra, 
+                    dLabor, dHealth, dSavings, dGroupIns, dOther, 
+                    Math.round(net)
+                ]);
+            }
+        }
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, "年度詳細報表");
+        XLSX.writeFile(wb, `Salary_Detail_Report_${currentYear}.xlsx`);
+    }
+
+    function exportJson() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `PT_Backup_${currentYear}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const raw = JSON.parse(e.target.result);
+                if (typeof raw === 'object') {
+                    appData = raw;
+                    saveData();
+                    alert("匯入成功！頁面將重新整理。");
+                    location.reload();
+                } else { alert("格式錯誤"); }
+            } catch (err) { alert("檔案損毀"); }
+        };
+        reader.readAsText(file);
+    }
+</script>
+</body>
+</html>
